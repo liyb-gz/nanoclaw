@@ -14,7 +14,7 @@
       "variant": "high"
     },
     "librarian": {
-      "model": "opencode/glm-4.7-free"
+      "model": "opencode/gemini-3-flash"
     },
     "explore": {
       "model": "opencode/claude-haiku-4-5"
@@ -35,7 +35,7 @@
       "variant": "medium"
     },
     "atlas": {
-      "model": "opencode/kimi-k2.5-free"
+      "model": "opencode/gemini-3-flash"
     }
   },
   "categories": {

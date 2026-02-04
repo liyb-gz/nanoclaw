@@ -79,7 +79,7 @@ async function runOpenCode(
 
     const proc = spawn('opencode', args, {
       cwd: '/workspace/group',
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: ['ignore', 'pipe', 'pipe'], // stdin ignored - prompt passed via args
       env: {
         ...process.env,
         HOME: '/home/node',
@@ -116,11 +116,11 @@ async function runOpenCode(
           if (!line.trim()) continue;
           try {
             const event = JSON.parse(line);
-            if (event.type === 'text' && event.text) {
-              output += event.text;
+            if (event.type === 'text' && event.part?.text) {
+              output += event.part.text;
             }
-            if (event.session_id) {
-              newSessionId = event.session_id;
+            if (event.sessionID) {
+              newSessionId = event.sessionID;
             }
           } catch {
             output += line;

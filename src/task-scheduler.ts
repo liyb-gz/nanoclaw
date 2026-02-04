@@ -10,6 +10,7 @@ import {
   TIMEZONE,
 } from './config.js';
 import { runContainerAgent, writeTasksSnapshot } from './container-runner.js';
+import { withContainerLock } from './container-lock.js';
 import {
   getAllTasks,
   getDueTasks,
@@ -85,7 +86,7 @@ async function runTask(
   const sessionId =
     task.context_mode === 'group' ? sessions[task.group_folder] : undefined;
 
-  try {
+  const containerResult = await withContainerLock(async () => {
     const output = await runContainerAgent(group, {
       prompt: task.prompt,
       sessionId,
@@ -94,21 +95,24 @@ async function runTask(
       isMain,
       isScheduledTask: true,
     });
+    return output;
+  });
 
-    if (output.status === 'error') {
-      error = output.error || 'Unknown error';
-    } else {
-      result = output.result;
-    }
-
-    logger.info(
-      { taskId: task.id, durationMs: Date.now() - startTime },
-      'Task completed',
-    );
-  } catch (err) {
-    error = err instanceof Error ? err.message : String(err);
-    logger.error({ taskId: task.id, error }, 'Task failed');
+  if (containerResult === null) {
+    logger.info({ taskId: task.id }, 'Task skipped - container busy');
+    return;
   }
+
+  if (containerResult.status === 'error') {
+    error = containerResult.error || 'Unknown error';
+  } else {
+    result = containerResult.result;
+  }
+
+  logger.info(
+    { taskId: task.id, durationMs: Date.now() - startTime },
+    'Task completed',
+  );
 
   const durationMs = Date.now() - startTime;
 

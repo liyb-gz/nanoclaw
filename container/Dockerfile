@@ -49,17 +49,22 @@ RUN npm run build
 
 # Create workspace directories and OpenCode config
 RUN mkdir -p /workspace/group /workspace/global /workspace/extra /workspace/ipc/messages /workspace/ipc/tasks \
-    /home/node/.config/opencode /home/node/.local/share/opencode /workspace/group/.opencode/tools
+    /home/node/.config/opencode /home/node/.local/share/opencode /home/node/.local/state /home/node/.cache \
+    /workspace/group/.opencode/tools
 
-# Copy custom tools for NanoClaw IPC
+# Copy custom tools for NanoClaw IPC and install dependencies
 COPY tools/nanoclaw.ts /workspace/group/.opencode/tools/
+RUN cd /workspace/group/.opencode/tools && npm init -y && npm install cron-parser
+
+# Copy OpenCode config with MCP servers (Tavily, etc.)
+COPY opencode.json /workspace/group/opencode.json
 
 # Create entrypoint script
 # Sources env from mounted /workspace/env-dir/env if it exists (workaround for Apple Container -i bug)
 RUN printf '#!/bin/bash\nset -e\n[ -f /workspace/env-dir/env ] && export $(cat /workspace/env-dir/env | xargs)\ncat > /tmp/input.json\nnode /app/dist/index.js < /tmp/input.json\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Set ownership to node user (non-root) for writable directories
-RUN chown -R node:node /workspace
+RUN chown -R node:node /workspace /home/node
 
 # Switch to non-root user (required for --dangerously-skip-permissions)
 USER node
