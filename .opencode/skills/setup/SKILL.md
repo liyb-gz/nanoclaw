@@ -7,8 +7,6 @@ description: Run initial NanoClaw setup. Use when user wants to install dependen
 
 Run all commands automatically. Only pause when user action is required (scanning QR codes).
 
-**UX Note:** When asking the user questions, prefer using the `AskUserQuestion` tool instead of just outputting text. This integrates with Claude's built-in question/answer system for a better experience.
-
 ## 1. Install Dependencies
 
 ```bash
@@ -30,6 +28,7 @@ which docker && docker info >/dev/null 2>&1 && echo "Docker: installed and runni
 Apple Container is macOS-only. Use Docker instead.
 
 Tell the user:
+
 > You're on Linux, so we'll use Docker for container isolation. Let me set that up now.
 
 **Use the `/convert-to-docker` skill** to convert the codebase to Docker, then continue to Section 3.
@@ -39,6 +38,7 @@ Tell the user:
 **If Apple Container is already installed:** Continue to Section 3.
 
 **If Apple Container is NOT installed:** Ask the user:
+
 > NanoClaw needs a container runtime for isolated agent execution. You have two options:
 >
 > 1. **Apple Container** (default) - macOS-native, lightweight, designed for Apple silicon
@@ -49,6 +49,7 @@ Tell the user:
 #### Option A: Apple Container
 
 Tell the user:
+
 > Apple Container is required for running agents in isolated environments.
 >
 > 1. Download the latest `.pkg` from https://github.com/apple/container/releases
@@ -69,42 +70,51 @@ container --version
 #### Option B: Docker
 
 Tell the user:
+
 > You've chosen Docker. Let me set that up now.
 
 **Use the `/convert-to-docker` skill** to convert the codebase to Docker, then continue to Section 3.
 
-## 3. Configure Claude Authentication
+## 3. Configure AI Provider Authentication
 
 Ask the user:
-> Do you want to use your **Claude subscription** (Pro/Max) or an **Anthropic API key**?
 
-### Option 1: Claude Subscription (Recommended)
+> Which AI provider do you want to use? OpenCode supports multiple providers:
+>
+> 1. **OpenCode Zen** (Recommended) - Curated models tested by OpenCode team
+> 2. **Anthropic API key** - Direct Claude access via API
+> 3. **OpenAI API key** - GPT models
+> 4. **Other provider** - Configure manually
+
+### Option 1: OpenCode Zen (Recommended)
 
 Tell the user:
-> Open another terminal window and run:
-> ```
-> claude setup-token
-> ```
-> A browser window will open for you to log in. Once authenticated, the token will be displayed in your terminal. Either:
-> 1. Paste it here and I'll add it to `.env` for you, or
-> 2. Add it to `.env` yourself as `CLAUDE_CODE_OAUTH_TOKEN=<your-token>`
 
-If they give you the token, add it to `.env`:
+> Run the following command to authenticate with OpenCode Zen:
+>
+> ```
+> opencode auth login
+> ```
+>
+> Select "opencode" when prompted, then follow the browser authentication flow.
+
+After they complete auth, verify:
 
 ```bash
-echo "CLAUDE_CODE_OAUTH_TOKEN=<token>" > .env
+opencode auth list
 ```
 
-### Option 2: API Key
+If the provider shows as authenticated, add any needed env vars:
+
+```bash
+# OpenCode manages auth internally, but we can add optional env vars
+touch .env
+```
+
+### Option 2: Anthropic API Key
 
 Ask if they have an existing key to copy or need to create one.
 
-**Copy existing:**
-```bash
-grep "^ANTHROPIC_API_KEY=" /path/to/source/.env > .env
-```
-
-**Create new:**
 ```bash
 echo 'ANTHROPIC_API_KEY=' > .env
 ```
@@ -112,10 +122,25 @@ echo 'ANTHROPIC_API_KEY=' > .env
 Tell the user to add their key from https://console.anthropic.com/
 
 **Verify:**
+
 ```bash
 KEY=$(grep "^ANTHROPIC_API_KEY=" .env | cut -d= -f2)
 [ -n "$KEY" ] && echo "API key configured: ${KEY:0:10}...${KEY: -4}" || echo "Missing"
 ```
+
+### Option 3: OpenAI API Key
+
+```bash
+echo 'OPENAI_API_KEY=' > .env
+```
+
+Tell the user to add their key from https://platform.openai.com/api-keys
+
+### Option 4: Other Provider
+
+Tell the user:
+
+> Run `opencode auth login` and select your provider to configure authentication.
 
 ## 4. Build Container Image
 
@@ -125,7 +150,7 @@ Build the NanoClaw agent container:
 ./container/build.sh
 ```
 
-This creates the `nanoclaw-agent:latest` image with Node.js, Chromium, Claude Code CLI, and agent-browser.
+This creates the `nanoclaw-agent:latest` image with Node.js, Chromium, OpenCode CLI, and agent-browser.
 
 Verify the build succeeded by running a simple test (this auto-detects which runtime you're using):
 
@@ -148,7 +173,9 @@ npm run auth
 ```
 
 Tell the user:
+
 > A QR code will appear. On your phone:
+>
 > 1. Open WhatsApp
 > 2. Tap **Settings → Linked Devices → Link a Device**
 > 3. Scan the QR code
@@ -160,13 +187,15 @@ If it says "Already authenticated", skip to the next step.
 ## 6. Configure Assistant Name
 
 Ask the user:
+
 > What trigger word do you want to use? (default: `Andy`)
 >
-> Messages starting with `@TriggerWord` will be sent to Claude.
+> Messages starting with `@TriggerWord` will be sent to the agent.
 
 If they choose something other than `Andy`, update it in these places:
-1. `groups/CLAUDE.md` - Change "# Andy" and "You are Andy" to the new name
-2. `groups/main/CLAUDE.md` - Same changes at the top
+
+1. `groups/global/AGENTS.md` - Change "# Andy" and "You are Andy" to the new name
+2. `groups/main/AGENTS.md` - Same changes at the top
 3. `data/registered_groups.json` - Use `@NewName` as the trigger when registering groups
 
 Store their choice - you'll use it when creating the registered_groups.json and when telling them how to test.
@@ -175,11 +204,12 @@ Store their choice - you'll use it when creating the registered_groups.json and 
 
 Before registering your main channel, you need to understand an important security concept.
 
-**Use the AskUserQuestion tool** to present this:
+Tell the user:
 
 > **Important: Your "main" channel is your admin control portal.**
 >
 > The main channel has elevated privileges:
+>
 > - Can see messages from ALL other registered groups
 > - Can manage and delete tasks across all groups
 > - Can write to global memory that all groups can read
@@ -190,32 +220,25 @@ Before registering your main channel, you need to understand an important securi
 > **Question:** Which setup will you use for your main channel?
 >
 > Options:
+>
 > 1. Personal chat (Message Yourself) - Recommended
 > 2. Solo WhatsApp group (just me)
 > 3. Group with other people (I understand the security implications)
 
-If they choose option 3, ask a follow-up:
-
-> You've chosen a group with other people. This means everyone in that group will have admin privileges over NanoClaw.
->
-> Are you sure you want to proceed? The other members will be able to:
-> - Read messages from your other registered chats
-> - Schedule and manage tasks
-> - Access any directories you've mounted
->
-> Options:
-> 1. Yes, I understand and want to proceed
-> 2. No, let me use a personal chat or solo group instead
+If they choose option 3, ask a follow-up about security implications.
 
 ## 8. Register Main Channel
 
 Ask the user:
+
 > Do you want to use your **personal chat** (message yourself) or a **WhatsApp group** as your main control channel?
 
 For personal chat:
+
 > Send any message to yourself in WhatsApp (the "Message Yourself" chat). Tell me when done.
 
 For group:
+
 > Send any message in the WhatsApp group you want to use as your main channel. Tell me when done.
 
 After user confirms, start the app briefly to capture the message:
@@ -234,7 +257,8 @@ sqlite3 store/messages.db "SELECT DISTINCT chat_jid FROM messages WHERE chat_jid
 sqlite3 store/messages.db "SELECT DISTINCT chat_jid FROM messages WHERE chat_jid LIKE '%@g.us' ORDER BY timestamp DESC LIMIT 5"
 ```
 
-Create/update `data/registered_groups.json` using the JID from above and the assistant name from step 5:
+Create/update `data/registered_groups.json` using the JID from above and the assistant name from step 6:
+
 ```json
 {
   "JID_HERE": {
@@ -247,6 +271,7 @@ Create/update `data/registered_groups.json` using the JID from above and the ass
 ```
 
 Ensure the groups folder exists:
+
 ```bash
 mkdir -p groups/main/logs
 ```
@@ -254,9 +279,10 @@ mkdir -p groups/main/logs
 ## 9. Configure External Directory Access (Mount Allowlist)
 
 Ask the user:
+
 > Do you want the agent to be able to access any directories **outside** the NanoClaw project?
 >
-> Examples: Git repositories, project folders, documents you want Claude to work on.
+> Examples: Git repositories, project folders, documents you want the agent to work on.
 >
 > **Note:** This is optional. Without configuration, agents can only access their own group folders.
 
@@ -276,87 +302,7 @@ echo "Mount allowlist created - no external directories allowed"
 
 Skip to the next step.
 
-If **yes**, ask follow-up questions:
-
-### 9a. Collect Directory Paths
-
-Ask the user:
-> Which directories do you want to allow access to?
->
-> You can specify:
-> - A parent folder like `~/projects` (allows access to anything inside)
-> - Specific paths like `~/repos/my-app`
->
-> List them one per line, or give me a comma-separated list.
-
-For each directory they provide, ask:
-> Should `[directory]` be **read-write** (agents can modify files) or **read-only**?
->
-> Read-write is needed for: code changes, creating files, git commits
-> Read-only is safer for: reference docs, config examples, templates
-
-### 9b. Configure Non-Main Group Access
-
-Ask the user:
-> Should **non-main groups** (other WhatsApp chats you add later) be restricted to **read-only** access even if read-write is allowed for the directory?
->
-> Recommended: **Yes** - this prevents other groups from modifying files even if you grant them access to a directory.
-
-### 9c. Create the Allowlist
-
-Create the allowlist file based on their answers:
-
-```bash
-mkdir -p ~/.config/nanoclaw
-```
-
-Then write the JSON file. Example for a user who wants `~/projects` (read-write) and `~/docs` (read-only) with non-main read-only:
-
-```bash
-cat > ~/.config/nanoclaw/mount-allowlist.json << 'EOF'
-{
-  "allowedRoots": [
-    {
-      "path": "~/projects",
-      "allowReadWrite": true,
-      "description": "Development projects"
-    },
-    {
-      "path": "~/docs",
-      "allowReadWrite": false,
-      "description": "Reference documents"
-    }
-  ],
-  "blockedPatterns": [],
-  "nonMainReadOnly": true
-}
-EOF
-```
-
-Verify the file:
-
-```bash
-cat ~/.config/nanoclaw/mount-allowlist.json
-```
-
-Tell the user:
-> Mount allowlist configured. The following directories are now accessible:
-> - `~/projects` (read-write)
-> - `~/docs` (read-only)
->
-> **Security notes:**
-> - Sensitive paths (`.ssh`, `.gnupg`, `.aws`, credentials) are always blocked
-> - This config file is stored outside the project, so agents cannot modify it
-> - Changes require restarting the NanoClaw service
->
-> To grant a group access to a directory, add it to their config in `data/registered_groups.json`:
-> ```json
-> "containerConfig": {
->   "additionalMounts": [
->     { "hostPath": "~/projects/my-app", "containerPath": "my-app", "readonly": false }
->   ]
-> }
-> ```
+If **yes**, collect directory paths and create the allowlist accordingly.
 
 ## 10. Configure launchd Service
 
@@ -414,6 +360,7 @@ launchctl load ~/Library/LaunchAgents/com.nanoclaw.plist
 ```
 
 Verify it's running:
+
 ```bash
 launchctl list | grep nanoclaw
 ```
@@ -421,9 +368,11 @@ launchctl list | grep nanoclaw
 ## 11. Test
 
 Tell the user (using the assistant name they configured):
+
 > Send `@ASSISTANT_NAME hello` in your registered chat.
 
 Check the logs:
+
 ```bash
 tail -f logs/nanoclaw.log
 ```
@@ -434,23 +383,27 @@ The user should receive a response in WhatsApp.
 
 **Service not starting**: Check `logs/nanoclaw.error.log`
 
-**Container agent fails with "Claude Code process exited with code 1"**:
+**Container agent fails with "OpenCode process exited with code 1"**:
+
 - Ensure the container runtime is running:
   - Apple Container: `container system start`
   - Docker: `docker info` (start Docker Desktop on macOS, or `sudo systemctl start docker` on Linux)
 - Check container logs: `cat groups/main/logs/container-*.log | tail -50`
 
 **No response to messages**:
+
 - Verify the trigger pattern matches (e.g., `@AssistantName` at start of message)
 - Check that the chat JID is in `data/registered_groups.json`
 - Check `logs/nanoclaw.log` for errors
 
 **WhatsApp disconnected**:
+
 - The service will show a macOS notification
 - Run `npm run auth` to re-authenticate
 - Restart the service: `launchctl kickstart -k gui/$(id -u)/com.nanoclaw`
 
 **Unload service**:
+
 ```bash
 launchctl unload ~/Library/LaunchAgents/com.nanoclaw.plist
 ```

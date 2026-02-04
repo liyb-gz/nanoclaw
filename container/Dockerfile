@@ -1,5 +1,5 @@
 # NanoClaw Agent Container
-# Runs Claude Agent SDK in isolated Linux VM with browser automation
+# Runs OpenCode SDK in isolated Linux VM with browser automation
 
 FROM node:22-slim
 
@@ -29,8 +29,8 @@ RUN apt-get update && apt-get install -y \
 ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Install agent-browser and claude-code globally
-RUN npm install -g agent-browser @anthropic-ai/claude-code
+# Install agent-browser and opencode globally
+RUN npm install -g agent-browser opencode-ai
 
 # Create app directory
 WORKDIR /app
@@ -47,8 +47,12 @@ COPY agent-runner/ ./
 # Build TypeScript
 RUN npm run build
 
-# Create workspace directories
-RUN mkdir -p /workspace/group /workspace/global /workspace/extra /workspace/ipc/messages /workspace/ipc/tasks
+# Create workspace directories and OpenCode config
+RUN mkdir -p /workspace/group /workspace/global /workspace/extra /workspace/ipc/messages /workspace/ipc/tasks \
+    /home/node/.config/opencode /home/node/.local/share/opencode /workspace/group/.opencode/tools
+
+# Copy custom tools for NanoClaw IPC
+COPY tools/nanoclaw.ts /workspace/group/.opencode/tools/
 
 # Create entrypoint script
 # Sources env from mounted /workspace/env-dir/env if it exists (workaround for Apple Container -i bug)
