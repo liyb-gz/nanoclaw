@@ -50,20 +50,20 @@ Then run `/setup`. OpenCode handles everything: dependencies, authentication, Do
 
 ## Usage
 
-Talk to your assistant with the trigger word (default: `@Andy`):
+Talk to your assistant with the trigger word (default: `@Mira`):
 
 ```
-@Andy send an overview of the sales pipeline every weekday morning at 9am (has access to my Obsidian vault folder)
-@Andy review the git history for the past week each Friday and update the README if there's drift
-@Andy every Monday at 8am, compile news on AI developments from Hacker News and TechCrunch and message me a briefing
+@Mira send an overview of the sales pipeline every weekday morning at 9am (has access to my Obsidian vault folder)
+@Mira review the git history for the past week each Friday and update the README if there's drift
+@Mira every Monday at 8am, compile news on AI developments from Hacker News and TechCrunch and message me a briefing
 ```
 
 From the main channel (your self-chat), you can manage groups and tasks:
 
 ```
-@Andy list all scheduled tasks across groups
-@Andy pause the Monday briefing task
-@Andy join the Family Chat group
+@Mira list all scheduled tasks across groups
+@Mira pause the Monday briefing task
+@Mira join the Family Chat group
 ```
 
 ## Customizing

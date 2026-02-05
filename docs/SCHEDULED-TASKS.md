@@ -15,18 +15,18 @@ Tasks are created by agents via tools, stored in SQLite, and executed by a host-
 Talk to the assistant:
 
 ```
-@Andy every Monday at 8am, compile AI news from Hacker News and message me a summary
-@Andy send an overview of the sales pipeline every weekday morning at 9am
-@Andy remind me to check email in 30 minutes
+@Mira every Monday at 8am, compile AI news from Hacker News and message me a summary
+@Mira send an overview of the sales pipeline every weekday morning at 9am
+@Mira remind me to check email in 30 minutes
 ```
 
 ## Managing Tasks
 
 ```
-@Andy list all scheduled tasks
-@Andy pause the Monday briefing task
-@Andy resume the news digest task
-@Andy cancel task task-1738649123456-abc123
+@Mira list all scheduled tasks
+@Mira pause the Monday briefing task
+@Mira resume the news digest task
+@Mira cancel task task-1738649123456-abc123
 ```
 
 ## Schedule Types
