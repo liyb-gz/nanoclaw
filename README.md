@@ -15,18 +15,18 @@ NanoClaw gives you the same core functionality in a codebase you can understand 
 ## Quick Start
 
 ```bash
-git clone https://github.com/gavrielc/nanoclaw.git
+git clone https://github.com/liyb-gz/nanoclaw.git
 cd nanoclaw
 opencode
 ```
 
-Then run `/setup`. OpenCode handles everything: dependencies, authentication, container setup, service configuration.
+Then run `/setup`. OpenCode handles everything: dependencies, authentication, Docker container setup, service configuration.
 
 ## Philosophy
 
 **Small enough to understand.** One process, a few source files. No microservices, no message queues, no abstraction layers. Have OpenCode walk you through it.
 
-**Secure by isolation.** Agents run in Linux containers (Apple Container on macOS, or Docker). They can only see what's explicitly mounted. Bash access is safe because commands run inside the container, not on your host.
+**Secure by isolation.** Agents run in Docker containers. They can only see what's explicitly mounted. Bash access is safe because commands run inside the container, not on your host.
 
 **Built for one user.** This isn't a framework. It's working software that fits my exact needs. You fork it and have OpenCode make it match your exact needs.
 
@@ -45,7 +45,7 @@ Then run `/setup`. OpenCode handles everything: dependencies, authentication, co
 - **Main channel** - Your private channel (self-chat) for admin control; every other group is completely isolated
 - **Scheduled tasks** - Recurring jobs that run the agent and can message you back
 - **Web access** - Search and fetch content
-- **Container isolation** - Agents sandboxed in Apple Container (macOS) or Docker (macOS/Linux)
+- **Container isolation** - Agents sandboxed in Docker containers
 - **Optional integrations** - Add Gmail (`/add-gmail`) and more via skills
 
 ## Usage
@@ -110,15 +110,15 @@ Skills we'd love to see:
 - macOS or Linux
 - Node.js 20+
 - [OpenCode](https://opencode.ai)
-- [Apple Container](https://github.com/apple/container) (macOS) or [Docker](https://docker.com/products/docker-desktop) (macOS/Linux)
+- [Docker](https://docker.com/products/docker-desktop)
 
 ## Architecture
 
 ```
-WhatsApp (baileys) --> SQLite --> Polling loop --> Container (OpenCode SDK) --> Response
+WhatsApp (baileys) --> SQLite --> Polling loop --> Docker Container (OpenCode CLI) --> Response
 ```
 
-Single Node.js process. Agents execute in isolated Linux containers with mounted directories. IPC via filesystem. No daemons, no queues, no complexity.
+Single Node.js process. Agents execute in isolated Docker containers with mounted directories. IPC via filesystem. No daemons, no queues, no complexity.
 
 Key files:
 
@@ -134,13 +134,9 @@ Key files:
 
 Because I use WhatsApp. Fork it and run a skill to change it. That's the whole point.
 
-**Why Apple Container instead of Docker?**
-
-On macOS, Apple Container is lightweight, fast, and optimized for Apple silicon. But Docker is also fully supported—during `/setup`, you can choose which runtime to use. On Linux, Docker is used automatically.
-
 **Can I run this on Linux?**
 
-Yes. Run `/setup` and it will automatically configure Docker as the container runtime. Thanks to [@dotsetgreg](https://github.com/dotsetgreg) for contributing the `/convert-to-docker` skill.
+Yes. Docker works on both macOS and Linux.
 
 **Is this secure?**
 
