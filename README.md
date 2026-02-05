@@ -6,6 +6,8 @@
   My personal AI assistant that runs securely in containers. Lightweight and built to be understood and customized for your own needs.
 </p>
 
+> **Note:** This is a fork of [gavrielc/nanoclaw](https://github.com/gavrielc/nanoclaw). This fork migrates from Claude Code to [OpenCode](https://opencode.ai), using Docker as the container runtime.
+
 ## Why I Built This
 
 [OpenClaw](https://github.com/openclaw/openclaw) is an impressive project with a great vision. But I can't sleep well running software I don't understand with access to my life. OpenClaw has 52+ modules, 8 config management files, 45+ dependencies, and abstractions for 15 channel providers. Security is application-level (allowlists, pairing codes) rather than OS isolation. Everything runs in one Node process with shared memory.
